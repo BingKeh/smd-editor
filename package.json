@@ -1,0 +1,12 @@
+{
+  "name": "smd-editor",
+  "version": "1.0.0",
+  "description": "a simple markdown editor",
+  "main": "index.js",
+  "author": "Bin Ge",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  }
+}
