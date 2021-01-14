@@ -1,0 +1,20 @@
+[contenteditable] {
+    outline: 1px solid beige;
+}
+
+.container {
+    min-height: 40rem;
+    outline: 1px solid beige;
+    padding: 1rem;
+    font-family: 'Roboto', sans-serif;
+}
+
+.container div {
+    background: bisque;
+    margin: 2px;
+}
+
+.container p {
+    line-height: 1rem;
+    margin: 0.4rem
+}
