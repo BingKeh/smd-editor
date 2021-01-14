@@ -1,4 +1,8 @@
+import { wrapString } from "./util";
+
 type ElementType = "h1" | "h2" | "h3" | "h4" | "h5" | "p" | "code";
+
+
 
 /**
  * return a new node, empty content will result a </br> 
@@ -6,18 +10,29 @@ type ElementType = "h1" | "h2" | "h3" | "h4" | "h5" | "p" | "code";
  * @param type node type
  */
 function getNewLine(content: string | null, type: ElementType = "p") {
-    const p = document.createElement(type);
+    const el = document.createElement(type);
     if (content === null || content.trim() === "") {
-        p.appendChild(document.createElement('br'));
+        el.appendChild(document.createElement('br'));
     } else {
-        p.appendChild(document.createTextNode(content));
+        el.appendChild(document.createTextNode(content));
     }
-    return p;
+
+    el.setAttribute("parsed", "true");
+    return el;
 }
 
-function parseMarkdon(content: string | null) {
-    if (content === null) return getNewLine('');
+function parseMarkdown(content: string | null, node: Node) {
+    content = wrapString(content);
+    if (!content) return getNewLine('');
     content = content.trim();
+
+    let el: HTMLElement;
+
+    const tag = node.parentElement?.tagName;
+    if (tag !== 'P' && node.nodeType === Node.TEXT_NODE) {
+        // doing some exame here
+        return getNewLine(content, tag as ElementType);
+    }
 
     // Heading syntax find
     if (content.startsWith('#')) {
@@ -41,14 +56,22 @@ function parseMarkdon(content: string | null) {
         } else {
             realVal = content.slice(hashCount);
         }
-
         return getNewLine(realVal, validFlag ? `h${hashCount}` as ElementType : 'p');
     }
 
-
-
     return getNewLine(content);
 }
+
+function removeSelf(node :Node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+        node.parentNode?.parentNode?.removeChild(node.parentNode);
+    }
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+        node.parentNode?.removeChild(node);
+    }
+}
+
 
 
 function init() {
@@ -58,49 +81,59 @@ function init() {
     }
 
     const range = document.createRange();
-    let lastInsertNode: Node;
+
+    const checkContent = () => {
+        if (editDiv.childElementCount === 0) {
+            const el = document.createElement('p');
+            el.appendChild(document.createElement('br'));
+            range.setStart(editDiv, 0);
+            range.insertNode(el);
+        }
+    };
+
+    editDiv.addEventListener('focus', () => checkContent());
+
 
     editDiv.addEventListener('keydown', (e: KeyboardEvent) => {
+        // always has a p 
+        checkContent();
+
         if (e.code !== 'Enter') return;
+        e.preventDefault();
+
+        // get current caret position
         const selection = window.getSelection();
 
-        // The node pointer point to
-        let currentNode = selection?.focusNode;
-        if (!currentNode) return;
-        
-        if (currentNode === editDiv) {
-            
-            range.setStart(currentNode, selection?.focusOffset as any);
-            lastInsertNode = getNewLine("");
-            range.insertNode(lastInsertNode);
-            e.preventDefault();
-            return;
-        }
+        // get focusNode, could be a text node(3) or element node(1)
+        const focusNode = selection?.focusNode;
+        if (!focusNode) return;
 
-        let val = currentNode.textContent;
-        let nodeInsert = parseMarkdon(val);
-
-        // currentNode will be editDiv if first line end with nothing !!
-        let parentNode = currentNode === editDiv ? currentNode : currentNode.parentNode;
+        const parentNode = focusNode.parentNode;
         if (!parentNode) return;
-        
-        // Check if the first node in editor, it will be a textNode under the editor node
-        if (parentNode === editDiv) {
-            range.setStart(editDiv, 0);
-            currentNode.textContent = '';
-            range.insertNode(nodeInsert);
-        } else {
-            range.setStartBefore(parentNode);
-            range.insertNode(nodeInsert); 
-            editDiv.removeChild(parentNode);   
-        }
+
+        let offest = selection?.focusOffset;
+        let content = wrapString(focusNode.textContent);
+        let textReversed = content.slice(0, offest);
+        let textNextLine = content.slice(offest);
+
+        let remainNode = parseMarkdown(textReversed, focusNode);
+        let nextNode = parseMarkdown(textNextLine, focusNode);
+
+        range.setStartAfter(parentNode != editDiv ? parentNode : focusNode);
+        range.insertNode(remainNode);
+        range.setStartAfter(remainNode);
+        range.insertNode(nextNode);
 
 
-        // Insert new line after enter
-        range.setStartAfter(nodeInsert);
-        lastInsertNode = getNewLine("");
-        range.insertNode(lastInsertNode);
-        e.preventDefault();
+        // set range start to new insert node 
+        range.setStart(nextNode, 0);
+        range.collapse(true);
+
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
+    
+        removeSelf(focusNode);
     })
 
 
