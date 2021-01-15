@@ -1,7 +1,6 @@
-import { wrapString } from "./util";
+import { wrapString } from './util';
 
 type ElementType = "h1" | "h2" | "h3" | "h4" | "h5" | "p" | "code";
-
 
 
 /**
