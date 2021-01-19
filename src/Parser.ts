@@ -17,13 +17,13 @@ class ItalicNode implements MarkDownNode {
     }
 }
 
-interface SyntaxNode {
+interface MySyntaxNode {
     val: string,
     index: number
 }
 
 function parserMarkdown(content: string) {
-    let syntaxStack = new Array<SyntaxNode>();
+    let syntaxStack = new Array<MySyntaxNode>();
     let rootNode: MarkDownNode;
 
     let startIndex = 0;
