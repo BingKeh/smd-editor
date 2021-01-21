@@ -10,11 +10,6 @@ const assert = (valid: boolean, msg: string) => {
     throw new Error(msg);
 }
 
-const cDASH = '-';
-const cSTAR = '*';
-const cUNDER_SCORE = '_';
-const cEQUAL = '=';
-const cHASH = '#';
 
 const ATX_HEADING_REGEX = /^#{1,6} /;
 const THEMATIC_BREAKS_REGEX = /^( {0,3})(\*+|\-+|\_+)$/;
@@ -62,6 +57,8 @@ class MDIterator {
 }   
 
 type nodeType = "ATX_HEADINGS" | "BLANK_LINE" | "THEMATIC_BREAKS" | "SETTEXT_HEADING" | "CODE_BLOCK" | "PARAGRAPH" | "LIST" | "ROOT";
+
+type inlineType = "text" | "emphasis" | "bold";
 
 interface TokenNode {
     index?: number,
@@ -214,6 +211,9 @@ function pushBlock(parent: DocNode, node: DocNode) {
 
 
 
+
+
+
 /**
  * Parse token list
  * @param list 
@@ -286,6 +286,3 @@ function _parseNode(list: TokenNode[]) {
 
     return doc;
 }
-
-
-
