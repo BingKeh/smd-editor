@@ -3,11 +3,14 @@ type InlineType = "Bold" | "Text" | "Emphasis" | "InlineCode";
 
 export const punctuation_regex = /(\!)|(\")|(\#)|(\$)|(\%)|(\&)|(\')|(\()|(\))|(\*)|(\+)|(\-)|(\.)|(\/)|(\:)|(\;)|(\<)|(\=)|(\>)|(\?)|(\@)|(\[)|(\\)|(\])|(\^)|(\_)|(\`)|(\{)|(\|)|(\})|(\~)/;
 
+export const enitity_regex = /^\&(copy|commat)/i;
+
 export const cDASH = '-';
 export const cSTAR = '*';
 export const cUNDER_SCORE = '_';
 export const cEQUAL = '=';
 export const cHASH = '#';
+export const AND = '&';
 export const cECLAMATION = '!';
 export const cOPEN_SQUARE = '[';
 export const cCLOSE_SQUARE = ']';

@@ -55,10 +55,33 @@ function parseInline(md: string) {
 
         // maybe a backslash to escape
         if (s === MD.cBACKSLASH) {
-            
+            // followed by a punctuation char, escape it, otherwise treat is as a normal text
+            if (MD.punctuation_regex.test(s[i + 1])) {
+                pushLineNode({
+                    type: "text",
+                    text: s[i++],
+                    close: false
+                });
+                continue;
+            }
         }
 
-        // maybe a inline code
+        // maybe a entity and numeric char
+        if (s === MD.AND) {
+            let r = _s.match(MD.enitity_regex);
+            if (r) {
+                let _t = r[0].toLowerCase() === '&copy' ? '©' : '@';
+                pushLineNode({
+                    type: 'text',
+                    text: _t,
+                    close: false
+                });
+                i += r[0].length - 1;
+                continue;
+            }
+        }
+
+        // maybe a code span
         if (s === MD.cBACK_TICK) {
             // find next backtick
             let r = _s.match(/^\`.*\`/);
@@ -130,6 +153,6 @@ function parseInline(md: string) {
     return _list;
 }
 
-const line = "hello*dssd*dsad`javacodehoho`";
+const line = `&copyhoho&commatasus.com`;
 let l = parseInline(line);
 console.log(l);
