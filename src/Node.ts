@@ -42,5 +42,7 @@ class BlockNode implements SyntaxNode {
 
 
 export interface InlineNode {
-    [propName: string]: any
+    type: "text" | "inline_code";
+    text: string,
+    active: boolean,
 }
