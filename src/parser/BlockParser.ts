@@ -1,16 +1,23 @@
 import _ from 'lodash';
 
-type DocNodeType = "root" | "thematic_breaks";
+type DocNodeType = "root" | "block_quote" | "thematic_breaks" | "atx_heading" | "settext_heading" | "paragraph" | "blank_line";
+
+const singleNodeType: DocNodeType[] = ["thematic_breaks"];
+
+const block_quote = /^ {0,3}> {0,1}(.*)$/;
 
 
 interface DocumentNode {
     type: DocNodeType,
     closed: boolean,
+    rawText?: string,
     
     children: DocumentNode[],
     parent?: DocumentNode,
     next?: DocumentNode,
     prev?: DocumentNode,
+
+    [propName: string]: any
 }
 
 /**
@@ -28,6 +35,18 @@ function getDeepOpenNode(node: DocumentNode): DocumentNode | null {
 
     return node;
 }
+
+function closeNode(node: DocumentNode) {
+    if (node.type === "root") return node;
+
+    if (node.closed === true) throw new Error("node has been closed!");
+
+    node.closed = false;
+
+    if (!node.parent) throw new Error("parent node required!");
+    return node.parent;
+}
+
 
 function readLines(md: string) {
     // replace all \r\n \r to \n
@@ -49,15 +68,50 @@ function readLines(md: string) {
 
 }
 
+function markNodeForClosable(node: DocumentNode, newNode: DocumentNode, line: string) {
+    if (node.type in singleNodeType) return true;
+
+    if (node.type === newNode.type) return false;
+
+    return false;
+    
+}
+
+function markNodes(node: DocumentNode, newNode: DocumentNode, line: string) {
+    let nodes: DocumentNode[] = [];
+    while (node.type !== "root") {
+        let _r = markNodeForClosable(node, newNode, line);
+        if (_r) nodes.push(node);
+        if (!node.parent) break;
+        node = node.parent;
+    }
+
+    return nodes;
+}
+
 
 function parserLine(line: string, root: DocumentNode) {
     // thematic breaks
     const thematic_regex = /^( {0,3})(-+|_+|\*+)[ \t]*$/;
 
-    let _deepNode = getDeepOpenNode(root);
-    if (!_deepNode) throw new Error("invalid node");
+    // atx heading
+    const atx_heading = /^ {0,3}(#{1,6}) (.*)$/;
 
-    if (line.match(thematic_regex)) {
-        // 
-    }
+    // settext heading
+    const settext_heading = /^ {0,3}(=+|-+) *$/;
+
+
+    let _node = getDeepOpenNode(root);
+    if (!_node) throw new Error("invalid node");
+
+    let _match: RegExpMatchArray | null;
+
+    // check if reamain open
+
+
+
+    
+
+    // treat as a paragraph
+
 }
