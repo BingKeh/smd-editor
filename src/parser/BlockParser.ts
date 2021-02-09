@@ -4,8 +4,18 @@ type DocNodeType = "root" | "block_quote" | "thematic_breaks" | "atx_heading" | 
 
 const singleNodeType: DocNodeType[] = ["thematic_breaks"];
 
+
+// block quote
 const block_quote = /^ {0,3}> {0,1}(.*)$/;
 
+// thematic breaks
+const thematic_regex = /^( {0,3})(-+|_+|\*+)[ \t]*$/;
+
+// atx heading
+const atx_heading = /^ {0,3}(#{1,6}) (.*)$/;
+
+// settext heading
+const settext_heading = /^ {0,3}(=+|-+) *$/;
 
 interface DocumentNode {
     type: DocNodeType,
@@ -69,11 +79,27 @@ function readLines(md: string) {
 }
 
 function markNodeForClosable(node: DocumentNode, newNode: DocumentNode, line: string) {
-    if (node.type in singleNodeType) return true;
+    if (node.type === "block_quote") {
+        if (newNode.type === "block_quote") return false;
+        return true;
+    }
 
-    if (node.type === newNode.type) return false;
+    if (node.type === "thematic_breaks") {
+        return true;
+    }
 
-    return false;
+    if (node.type === "atx_heading") {
+        return true;
+    }
+
+    if (node.type === "settext_heading") {
+        return true;
+    }
+
+    if (node.type === "paragraph") {
+        if (newNode.type === "paragraph") return false;
+        return true;
+    }
     
 }
 
@@ -81,7 +107,10 @@ function markNodes(node: DocumentNode, newNode: DocumentNode, line: string) {
     let nodes: DocumentNode[] = [];
     while (node.type !== "root") {
         let _r = markNodeForClosable(node, newNode, line);
-        if (_r) nodes.push(node);
+
+        if (!_r) break;
+
+        nodes.push(node);
         if (!node.parent) break;
         node = node.parent;
     }
@@ -89,29 +118,50 @@ function markNodes(node: DocumentNode, newNode: DocumentNode, line: string) {
     return nodes;
 }
 
+function parseLeadBlock(md: string) {
+
+}
+
 
 function parserLine(line: string, root: DocumentNode) {
-    // thematic breaks
-    const thematic_regex = /^( {0,3})(-+|_+|\*+)[ \t]*$/;
-
-    // atx heading
-    const atx_heading = /^ {0,3}(#{1,6}) (.*)$/;
-
-    // settext heading
-    const settext_heading = /^ {0,3}(=+|-+) *$/;
-
 
     let _node = getDeepOpenNode(root);
     if (!_node) throw new Error("invalid node");
 
     let _match: RegExpMatchArray | null;
+    let _newNode: DocumentNode;
 
-    // check if reamain open
+    if (_match = line.match(block_quote)) {
+        let level = _match[1].replace(/\s+/, "").length;
+        _newNode = {
+            type: "block_quote",
+            closed: false,
+            level: level,
 
+            children: []
+        };
+        parseLeadBlock(_match[2]);
 
+    }
 
     
 
-    // treat as a paragraph
+}
 
+
+const testNode: DocumentNode = {
+    type: "root",
+    closed: false,
+
+    children: [{
+        type: "block_quote",
+        closed: false,
+
+        children: [{
+            type: "paragraph",
+            closed: false,
+
+            children: []
+        }]
+    }]
 }
