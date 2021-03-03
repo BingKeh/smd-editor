@@ -78,6 +78,12 @@ function readLines(md: string) {
 
 }
 
+/**
+ * check if current node can be marked for close
+ * @param node node to be checked
+ * @param newNode new node to insert
+ * @param line current line
+ */
 function markNodeForClosable(node: DocumentNode, newNode: DocumentNode, line: string) {
     if (node.type === "block_quote") {
         if (newNode.type === "block_quote") return false;
@@ -103,27 +109,31 @@ function markNodeForClosable(node: DocumentNode, newNode: DocumentNode, line: st
     
 }
 
-function markNodes(node: DocumentNode, newNode: DocumentNode, line: string) {
+function closeNodes(node: DocumentNode, newNode: DocumentNode, line: string) {
     let nodes: DocumentNode[] = [];
-    while (node.type !== "root") {
+    let _node = node;
+    while (_node.type !== "root") {
         let _r = markNodeForClosable(node, newNode, line);
 
         if (!_r) break;
 
-        nodes.push(node);
-        if (!node.parent) break;
-        node = node.parent;
+        nodes.push(_node);
+        if (!_node.parent) break;
+        _node = _node.parent;
+    }
+
+    // check for lazy continuation
+    if (newNode.type === "paragraph" && node.type === "block_quote") {
+        return;
     }
 
     return nodes;
 }
 
-function parseLeadBlock(md: string) {
-
-}
 
 
-function parserLine(line: string, root: DocumentNode) {
+
+function parseLine(line: string, root: DocumentNode) {
 
     let _node = getDeepOpenNode(root);
     if (!_node) throw new Error("invalid node");
@@ -131,6 +141,7 @@ function parserLine(line: string, root: DocumentNode) {
     let _match: RegExpMatchArray | null;
     let _newNode: DocumentNode;
 
+    // if current line can be parsed as a block quote
     if (_match = line.match(block_quote)) {
         let level = _match[1].replace(/\s+/, "").length;
         _newNode = {
@@ -140,8 +151,10 @@ function parserLine(line: string, root: DocumentNode) {
 
             children: []
         };
-        parseLeadBlock(_match[2]);
 
+
+        closeNodes(_node, _newNode, line);
+        
     }
 
     
@@ -149,19 +162,3 @@ function parserLine(line: string, root: DocumentNode) {
 }
 
 
-const testNode: DocumentNode = {
-    type: "root",
-    closed: false,
-
-    children: [{
-        type: "block_quote",
-        closed: false,
-
-        children: [{
-            type: "paragraph",
-            closed: false,
-
-            children: []
-        }]
-    }]
-}

@@ -28,19 +28,6 @@ interface SyntaxNode {
 
 }
 
-class BlockNode implements SyntaxNode {
-    type: string;
-    children: MySyntaxNode[];
-    closed: boolean;
-
-    constructor(type: BlockType) {
-        this.type = type;
-        this.children = [];
-        this.closed = false;
-    }
-}
-
-
 export interface InlineNode {
     type: "text" | "inline_code";
     text: string,
